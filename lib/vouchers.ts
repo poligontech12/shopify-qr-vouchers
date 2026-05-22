@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { sql } from "./db";
+import { query } from "./db";
 
 export type Voucher = {
   token: string;
@@ -21,9 +21,10 @@ export type NewVoucherInput = {
 };
 
 export async function orderHasVouchers(orderId: string): Promise<boolean> {
-  const { rows } = await sql`
-    SELECT 1 FROM vouchers WHERE order_id = ${orderId} LIMIT 1
-  `;
+  const { rows } = await query(
+    "SELECT 1 FROM vouchers WHERE order_id = $1 LIMIT 1",
+    [orderId],
+  );
   return rows.length > 0;
 }
 
@@ -33,23 +34,25 @@ export async function createVouchers(
   const tokens: string[] = [];
   for (const item of items) {
     const token = crypto.randomBytes(16).toString("hex");
-    await sql`
-      INSERT INTO vouchers (token, order_id, order_number, email, product_name)
-      VALUES (${token}, ${item.order_id}, ${item.order_number}, ${item.email}, ${item.product_name})
-    `;
+    await query(
+      `INSERT INTO vouchers (token, order_id, order_number, email, product_name)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [token, item.order_id, item.order_number, item.email, item.product_name],
+    );
     tokens.push(token);
   }
   return tokens;
 }
 
 export async function getByToken(token: string): Promise<Voucher | null> {
-  const { rows } = await sql<Voucher>`
-    SELECT token, order_id, order_number, email, product_name,
-           partner_store, used, used_at, created_at
-    FROM vouchers
-    WHERE token = ${token}
-    LIMIT 1
-  `;
+  const { rows } = await query<Voucher>(
+    `SELECT token, order_id, order_number, email, product_name,
+            partner_store, used, used_at, created_at
+     FROM vouchers
+     WHERE token = $1
+     LIMIT 1`,
+    [token],
+  );
   return rows[0] ?? null;
 }
 
@@ -62,10 +65,11 @@ export async function redeem(
   token: string,
   partnerStore: string,
 ): Promise<RedeemResult> {
-  const result = await sql`
-    UPDATE vouchers
-    SET used = TRUE, used_at = NOW(), partner_store = ${partnerStore}
-    WHERE token = ${token} AND used = FALSE
-  `;
+  const result = await query(
+    `UPDATE vouchers
+     SET used = TRUE, used_at = NOW(), partner_store = $1
+     WHERE token = $2 AND used = FALSE`,
+    [partnerStore, token],
+  );
   return result.rowCount === 1 ? "ok" : "already_used_or_missing";
 }

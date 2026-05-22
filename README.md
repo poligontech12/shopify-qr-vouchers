@@ -63,7 +63,7 @@ Then visit `http://localhost:3000/redeem/<token>` and enter a PIN (e.g. `1234`).
 1. Push this repo to GitHub.
 2. In the Vercel dashboard, **New Project** → import the repo.
 3. **Storage** tab → **Create Database** → Postgres. Vercel will inject `POSTGRES_URL` automatically.
-   - Note: Vercel Postgres has been replaced by Neon. The `POSTGRES_URL` env var is still auto-injected and works with the `@vercel/postgres` package this project uses. Long-term you may want to migrate to the `@neondatabase/serverless` SDK directly (one-file change in `lib/db.ts`).
+   - Note: Vercel Postgres has been migrated to Neon. This project uses the standard `pg` driver, which speaks plain Postgres protocol and works with both local Postgres and Vercel/Neon's hosted instance over the auto-injected `POSTGRES_URL`. If you later want the cold-start optimizations of Neon's serverless driver on Vercel, swap `lib/db.ts` to `@neondatabase/serverless` — it's a one-file change.
 4. Open a SQL console in the Storage tab (or use `psql` with `vercel env pull`) and run the contents of `migrations/001_init.sql` once.
 5. In **Settings → Environment Variables**, add:
    - `SHOPIFY_WEBHOOK_SECRET`
@@ -129,6 +129,7 @@ WHERE order_id = '<shopify-order-id>' AND used = FALSE;
 | `app/redeem/[token]/RedeemForm.tsx` | Client-side PIN entry that POSTs to the API and reloads on success |
 | `app/api/redeem/[token]/route.ts` | Validates PIN against `PARTNER_PINS`, performs atomic `UPDATE ... WHERE used=false` |
 | `lib/hmac.ts` | Constant-time HMAC verify |
+| `lib/db.ts` | Shared `pg.Pool` (cached on `globalThis` to survive dev-mode hot reload) |
 | `lib/vouchers.ts` | DB layer: lookup, insert, atomic redeem |
 | `lib/qr.ts` | `qrcode` → data URL |
 | `lib/email.ts` | Resend send with inline QR `<img>` tags |
