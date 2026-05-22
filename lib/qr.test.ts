@@ -1,17 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { tokenToDataUrl } from "./qr";
+import { urlToQrPng } from "./qr";
 
-describe("tokenToDataUrl", () => {
-  it("returns a PNG data URL for a given URL", async () => {
-    const url = await tokenToDataUrl("https://example.com/redeem/abc123");
-    expect(url.startsWith("data:image/png;base64,")).toBe(true);
-    // Base64 payload should be non-trivial in size
-    expect(url.length).toBeGreaterThan(200);
+describe("urlToQrPng", () => {
+  it("returns a PNG buffer for a given URL", async () => {
+    const buf = await urlToQrPng("https://example.com/redeem/abc123");
+    expect(Buffer.isBuffer(buf)).toBe(true);
+    // PNG magic bytes
+    expect(buf[0]).toBe(0x89);
+    expect(buf.subarray(1, 4).toString()).toBe("PNG");
+    expect(buf.length).toBeGreaterThan(200);
   });
 
   it("produces different output for different inputs", async () => {
-    const a = await tokenToDataUrl("https://example.com/redeem/aaa");
-    const b = await tokenToDataUrl("https://example.com/redeem/bbb");
-    expect(a).not.toBe(b);
+    const a = await urlToQrPng("https://example.com/redeem/aaa");
+    const b = await urlToQrPng("https://example.com/redeem/bbb");
+    expect(a.equals(b)).toBe(false);
   });
 });
