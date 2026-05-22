@@ -1,0 +1,31 @@
+{
+  "name": "shopify-qr-vouchers",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@vercel/postgres": "0.10.0",
+    "resend": "4.0.1",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "@types/node": "20.16.10",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@types/qrcode": "1.5.5",
+    "tailwindcss": "3.4.13",
+    "postcss": "8.4.47",
+    "autoprefixer": "10.4.20",
+    "vitest": "2.1.2"
+  }
+}
